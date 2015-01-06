@@ -1,3 +1,8 @@
+############################################################################
+#                                                                          #
+# Beginning of code for daily space/time interpolation                     # 
+#                                                                          #
+############################################################################
 library(dplyr)
 library(spacetime)
 library(xts)
@@ -5,7 +10,7 @@ library(data.table)
 # Source "download.R" to get the data downloaded and saved as an .rdata file
 load("removal_bias_data.rdata")
 
-# function for making an STSDF object (spatetime package)
+# function for making an STSDF object (spacetime package)
 makeSTSDF <- function(pollution, locations){
   # pollution <- allozone
   # locations <- sites

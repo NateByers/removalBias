@@ -234,7 +234,7 @@ ozone.files <- list.files("allozone")
 pm.88101.files <- list.files("all88101")
 pm.88502.files <- list.files("all88502")
 
-# get biases
+# get biases for ozone
 library(pbapply)
 options("pbapply.pb"="txt")
 then <- Sys.time()
@@ -242,3 +242,31 @@ ozone.bias.ls <- pblapply(ozone.files, calcBias, pollutant.directory = "allozone
                           distances = ozone.combos, sites = ozone.sites)
 Sys.time() - then 
 ozone.bias.dt <- rbindlist(ozone.bias.ls)
+write.csv(ozone.bias.dt, file = "ozoneBias.csv")
+
+# get biases for 88101
+then <- Sys.time()
+pm.88101.bias.ls <- pblapply(pm.88101.files, calcBias, pollutant.directory = "all88101",
+                          distances = pm.88101.combos, sites = pm.88101.sites)
+Sys.time() - then 
+pm.88101.bias.dt <- rbindlist(pm.88101.bias.ls)
+write.csv(pm.88101.bias.dt, file = "pm88101Bias.csv")
+
+# get biases for 88502
+then <- Sys.time()
+pm.88502.bias.ls <- pblapply(pm.88502.files, calcBias, pollutant.directory = "all88502",
+                             distances = pm.88502.combos, sites = pm.88502.sites)
+Sys.time() - then 
+pm.88502.bias.dt <- rbindlist(pm.88502.bias.ls)
+write.csv(pm.88502.bias.dt, file = "pm88502Bias.csv")
+
+# make a sites table with mean bias for each pollutant
+ozone.bias.dt <- ozone.bias.dt[, c("siteID", "mean"), with = FALSE] 
+setnames(ozone.bias.dt, "mean", "bias_ozone")
+pm.88101.bias.dt <- pm.88101.bias.dt[, c("siteID", "mean"), with = FALSE] 
+setnames(pm.88101.bias.dt, "mean", "bias_pm88101")
+bias.dt <- merge(ozone.bias.dt, pm.88101.bias.dt, by = "siteID", all = TRUE)
+pm.88502.bias.dt <- pm.88502.bias.dt[, c("siteID", "mean"), with = FALSE] 
+setnames(pm.88502.bias.dt, "mean", "bias_pm88502")
+bias.dt <- merge(bias.dt, pm.88502.bias.dt, by = "siteID", all = TRUE)
+write.csv(bias.dt, file = "allSitesBias.csv")
