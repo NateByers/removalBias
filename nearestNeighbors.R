@@ -130,14 +130,13 @@ pm.88502.combos <- getDistances(pm.88502.sites)
 
 
 calcBias <- function(monitor.file, pollutant.directory, distances, sites){
-  # pollutant.directory <- "allozone"
-  # monitor.file <- "72-077-0001.rdata"
-  # distances <- ozone.combos
-  # sites <- ozone.sites
+  # pollutant.directory <- "all88101"
+  # monitor.file <- "30-029-0049.rdata"
+  # distances <- pm.88101.combos
+  # sites <- pm.88101.sites
   
   # load the data for the monitor of interest. All of the .rdata files have a data.table object 
   # called sub.data
-  print(monitor.file)
   load(paste0(pollutant.directory, "/", monitor.file))
   
   # get monitor id
@@ -211,19 +210,37 @@ calcBias <- function(monitor.file, pollutant.directory, distances, sites){
       denom <- denom[!denom == 0, ]
     }
     
+    # if the denom vector has zeros, remove that index from denom and summed
+    denom <- denom[denom != 0]
+    summed <- summed[denom != 0]
+    
     # calculate inverse distance squared weighted average for each day
     weighted.avg <- summed/denom
     
+    # get the daily values for the monitor of interest as a vector
+    
+    daily <- as.data.frame(subset(monitors.dt, select = 2))[, 1]
+    
     # calculate difference between each interpolated value and the actual
     # value for the monitor
-    diff <- as.data.frame(subset(monitors.dt, select = 2))[, 1] - weighted.avg
+    diff <-  daily - weighted.avg
+    
+    # if there are zeros in the daily vector, get rid of that index
+    rel.daily <- daily[daily != 0]
+    rel.diff <- diff[daily != 0]
+    
+    # calculate relative bias
+    rel.diff <- rel.diff/rel.daily
     
     # create data table with mean, min, max, standard deviation, and number of days
-    data.table(siteID = monitor, mean = mean(diff), min = min(diff), max = max(diff),
-               sd = sd(diff), n = length(diff))
+    data.table(siteID = monitor, bias_mean = mean(diff), bias_min = min(diff), 
+               bias_max = max(diff), bias_sd = sd(diff), bias_n = length(diff),
+               relbias_mean = mean(rel.diff), relbias_min = min(rel.diff), 
+               relbias_max = max(rel.diff))
   } else {
-    data.table(siteID = monitor, mean = NA, min = NA, max = NA,
-               sd = NA, n = NA)
+    data.table(siteID = monitor, bias_mean = NA, bias_min = NA, bias_max = NA,
+               bias_sd = NA, bis_n = NA, relbias_mean = NA, relbias_min = NA, 
+               relbias_max = NA)
   }
   
   
@@ -261,12 +278,12 @@ pm.88502.bias.dt <- rbindlist(pm.88502.bias.ls)
 write.csv(pm.88502.bias.dt, file = "pm88502Bias.csv")
 
 # make a sites table with mean bias for each pollutant
-ozone.bias.dt <- ozone.bias.dt[, c("siteID", "mean"), with = FALSE] 
-setnames(ozone.bias.dt, "mean", "bias_ozone")
-pm.88101.bias.dt <- pm.88101.bias.dt[, c("siteID", "mean"), with = FALSE] 
-setnames(pm.88101.bias.dt, "mean", "bias_pm88101")
+ozone.bias.dt <- ozone.bias.dt[, c("siteID", "bias_mean", "relbias_mean"), with = FALSE] 
+setnames(ozone.bias.dt, c("bias_mean", "relbias_mean"), c("bias_ozone", "relbias_ozone"))
+pm.88101.bias.dt <- pm.88101.bias.dt[, c("siteID", "bias_mean", "relbias_mean"), with = FALSE] 
+setnames(pm.88101.bias.dt, c("bias_mean", "relbias_mean"), c("bias_pm88101", "relbias_pm88101"))
 bias.dt <- merge(ozone.bias.dt, pm.88101.bias.dt, by = "siteID", all = TRUE)
-pm.88502.bias.dt <- pm.88502.bias.dt[, c("siteID", "mean"), with = FALSE] 
-setnames(pm.88502.bias.dt, "mean", "bias_pm88502")
+pm.88502.bias.dt <- pm.88502.bias.dt[, c("siteID", "bias_mean", "relbias_mean"), with = FALSE] 
+setnames(pm.88502.bias.dt, c("bias_mean", "relbias_mean"), c("bias_pm88502", "relbias_pm88502"))
 bias.dt <- merge(bias.dt, pm.88502.bias.dt, by = "siteID", all = TRUE)
 write.csv(bias.dt, file = "allSitesBias.csv")
