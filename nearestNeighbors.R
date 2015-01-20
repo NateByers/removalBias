@@ -130,10 +130,10 @@ pm.88502.combos <- getDistances(pm.88502.sites)
 
 
 calcBias <- function(monitor.file, pollutant.directory, distances, sites){
-  # pollutant.directory <- "all88101"
-  # monitor.file <- "30-029-0049.rdata"
-  # distances <- pm.88101.combos
-  # sites <- pm.88101.sites
+  # pollutant.directory <- "allozone"
+  # monitor.file <- "01-003-0010.rdata"
+  # distances <- ozone.combos
+  # sites <- ozone.sites
   
   # load the data for the monitor of interest. All of the .rdata files have a data.table object 
   # called sub.data
@@ -218,12 +218,11 @@ calcBias <- function(monitor.file, pollutant.directory, distances, sites){
     weighted.avg <- summed/denom
     
     # get the daily values for the monitor of interest as a vector
-    
     daily <- as.data.frame(subset(monitors.dt, select = 2))[, 1]
     
     # calculate difference between each interpolated value and the actual
     # value for the monitor
-    diff <-  daily - weighted.avg
+    diff <-  weighted.avg - daily 
     
     # if there are zeros in the daily vector, get rid of that index
     rel.daily <- daily[daily != 0]
