@@ -131,7 +131,7 @@ pm.88502.combos <- getDistances(pm.88502.sites)
 
 calcBias <- function(monitor.file, pollutant.directory, distances, sites){
   # pollutant.directory <- "allozone"
-  # monitor.file <- "01-003-0010.rdata"
+  # monitor.file <- "18-089-0022.rdata"
   # distances <- ozone.combos
   # sites <- ozone.sites
   
@@ -229,7 +229,7 @@ calcBias <- function(monitor.file, pollutant.directory, distances, sites){
     rel.diff <- diff[daily != 0]
     
     # calculate relative bias
-    rel.diff <- rel.diff/rel.daily
+    rel.diff <- round(100* (rel.diff/rel.daily))
     
     # create data table with mean, min, max, standard deviation, and number of days
     data.table(siteID = monitor, bias_mean = mean(diff), bias_min = min(diff), 
